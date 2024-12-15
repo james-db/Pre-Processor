@@ -604,8 +604,10 @@ if __name__ == "__main__":
         ],
     )
 
-    character_detector: Character_Detector = Character_Detector()
-    character_detector.build(DETECTION_MODEL_PATH)
+    character_detector: Character_Detector = Character_Detector(
+        DETECTION_MODEL_PATH,
+    )
+    character_detector.build()
     recognizer_easy_ocr: EasyOCR = EasyOCR(EASYOCR_LANGUAGE)
     recognizer_paddle: Paddle = Paddle(lang=PADDLE_LANGUAGE)
     recognizer_surya: Surya = Surya(SURYA_LANGUAGE)

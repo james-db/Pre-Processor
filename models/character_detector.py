@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import cv2
+import gdown
 import logging
 import numpy as np
 import os
@@ -7,7 +8,10 @@ import sys
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+import urllib3
 
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from .CRAFT_pytorch import imgproc
 from .CRAFT_pytorch.craft import CRAFT
@@ -27,13 +31,25 @@ from utils.utils import (
 
 class Character_Detector():
 
-    def __init__(self) -> None:
+    def __init__(self, f: str=""):
 
-        cur_dir: str = os.path.abspath(os.path.dirname(__file__))
-        self.f: str = os.path.join(
-            cur_dir,
-            "CRAFT_pytorch/model/craft_mlt_25k.pth",
-        )
+        if os.path.isfile(f):
+
+            self.f: str = f
+
+        else:
+
+            print(f"{sys._getframe(0).f_code.co_name} - Model file not exist. Use default model.")
+
+            cur_dir: str = os.path.abspath(os.path.dirname(__file__))
+            self.f: str = os.path.join(
+                cur_dir,
+                "CRAFT_pytorch/model/craft_mlt_25k.pth",
+            )
+
+            if not os.path.isfile(self.f):
+
+                self.__download()
 
     def __call__(self, image: np.ndarray, canvas_size: int=1280,
                  mag_ratio: float=1.5) -> np.ndarray:
@@ -48,6 +64,18 @@ class Character_Detector():
         )
 
         return heatmap
+
+    def __download(self):
+
+        print(f"{sys._getframe(0).f_code.co_name} - Download default model.")
+
+        dir: str = os.path.dirname(self.f)
+
+        os.makedirs(dir, exist_ok=True)
+
+        file_id: str = "1lx1A-pl0_bhvWPXiYm_qDXKl6gYPVkNG"
+
+        gdown.download(id=file_id, output=self.f, verify=False)
 
     def __pre_process(self, image: np.ndarray, canvas_size: int=1280,
                     mag_ratio: float=1.5) -> tuple[torch.Tensor, float]:
@@ -79,19 +107,18 @@ class Character_Detector():
 
         return heatmap
 
-    def build(self, f) -> None:
+    def build(self) -> None:
 
         device: str = "cuda" if torch.cuda.is_available() else "cpu"
-        f: str = f if os.path.exists(f) else self.f 
 
         print(f"{sys._getframe(0).f_code.co_name} - Character Detector use device : {device}.")
-        print(f"{sys._getframe(0).f_code.co_name} - Character Detector use weights : {f}.")
+        print(f"{sys._getframe(0).f_code.co_name} - Character Detector use weights : {self.f}.")
 
         self.model: nn.Module = CRAFT()
         self.model.load_state_dict(
             copy_state_dict(
                 torch.load(
-                    f,
+                    self.f,
                     map_location=device
                 ),
             ),
