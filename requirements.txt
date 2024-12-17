@@ -1,0 +1,1 @@
+detectron2==0.6+2a420edpt2.5.1cu118

@@ -1,4 +1,6 @@
+*.bin
 *.pyc
 *.pth
 
+*/temp
 test

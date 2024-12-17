@@ -1,0 +1,92 @@
+Docbank:
+  classes: [
+      "abstract",
+      "author",
+      "caption",
+      "date",
+      "equation",
+      "figure",
+      "footer",
+      "list",
+      "paragraph",
+      "reference",
+      "section",
+      "table",
+      "title",
+  ]
+  config: "docbank_VGT_cascade_PTM.yaml"
+  id: "1ObhoHctETNhGUP4sZ5nQNb11ClRs-WLm"
+  model: "docbank_VGT_model.pth"
+  wordgrid:
+    id: "1ObhoHctETNhGUP4sZ5nQNb11ClRs-WLm"
+    model: "microsoft_layoutlm-base-uncased.bin"
+Doclaynet:
+  classes: [
+      "Caption",
+      "Footnote",
+      "Formula",
+      "List-item",
+      "Page-footer",
+      "Page-header",
+      "Picture",
+      "Section-header",
+      "Table",
+      "Text",
+      "Title",
+  ]
+  config: "doclaynet_VGT_cascade_PTM.yaml"
+  id: "1zuRCLpzTPtEextEDG9Y6-mBknL0kM9NK"
+  model: "doclaynet_VGT_model.pth"
+  wordgrid:
+    id: "1ONGHErlM9XtRuNfciPAXC-mapLqQarwt"
+    model: "microsoft_layoutlm-base-uncased.bin"
+D4LA:
+  classes: [
+      "DocTitle",
+      "ParaTitle",
+      "ParaText",
+      "ListText",
+      "RegionTitle",
+      "Date",
+      "LetterHead",
+      "LetterDear",
+      "LetterSign",
+      "Question",
+      "OtherText",
+      "RegionKV",
+      "Regionlist",
+      "Abstract",
+      "Author",
+      "TableName",
+      "Table",
+      "Figure",
+      "FigureName",
+      "Equation",
+      "Reference",
+      "Footnote",
+      "PageHeader",
+      "PageFooter",
+      "Number",
+      "Catalog",
+      "PageNumber",
+  ]
+  config: "D4LA_VGT_cascade_PTM.yaml"
+  id: "11EbxlCXM9r-1mK58spxlxUmVPalegrsl"
+  model: "D4LA_VGT_model.pth"
+  wordgrid:
+    id: "1ONGHErlM9XtRuNfciPAXC-mapLqQarwt"
+    model: "microsoft_layoutlm-base-uncased.bin"
+Publaynet:
+  classes: [
+      "text",
+      "title",
+      "list",
+      "table",
+      "figure",
+  ]
+  config: "publaynet_VGT_cascade_PTM.yaml"
+  id: "1JUkBnONSKrqT6BIA0YTNUow1hfE7pcKP"
+  model: "publaynet_VGT_model.pth"
+  wordgrid:
+    id: "1ONGHErlM9XtRuNfciPAXC-mapLqQarwt"
+    model: "microsoft_layoutlm-base-uncased.bin"
