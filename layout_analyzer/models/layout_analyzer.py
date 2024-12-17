@@ -46,10 +46,11 @@ class VGT(DefaultPredictor):
         self.classes: list = config.get("classes")
         self.dpi: int = dpi
         self.tokenizer = tokenizer
-        self.tolerance_factor: int = max(
-            10,
-            int(math.floor(self.dpi / 72 * 10)),
-        )
+        # self.tolerance_factor: int = max(
+        #     10,
+        #     int(math.floor(self.dpi / 72 * 10)),
+        # )
+        self.tolerance_factor: int = 10
 
         if not is_exist_config:
 
@@ -167,25 +168,21 @@ class VGT(DefaultPredictor):
             annots, id = self.post_process(id, i, result, width)
             annotations.extend(annots)
 
-            print(f"{sys._getframe(0).f_code.co_name} - annotations : {annotations}.")
-            
-            break
-
         return annotations
 
     def post_process(self, id: int, page: str, result: dict,
                      width: int) -> tuple[list, int]:
 
         instances = result.get("instances")
-        boxes: list = instances.pred_boxes.tensor.cpu().numpy().tolist() \
-            if instances.has("pred_boxes") else None
         categories: list = [
             self.classes[i] for i in instances.pred_classes.tolist()
         ] if instances.has("pred_classes") else None
+        coordinates: list = instances.pred_boxes.tensor.cpu().numpy().tolist() \
+            if instances.has("pred_boxes") else None
         scores: list = instances.scores.tolist() \
             if instances.has("scores") else None
         indices: list = get_sorted_indices(
-            boxes,
+            coordinates,
             width,
             self.tolerance_factor,
         )
@@ -194,11 +191,11 @@ class VGT(DefaultPredictor):
 
         for i in indices:
 
-            box: tuple = tuple([c / self.dpi for c in boxes[i]])
+            coor: tuple = tuple([c / self.dpi for c in coordinates[i]])
             annotation: dict = {
-                "id": id,
-                "box": box,
                 "category": categories[i],
+                "coordinates": coor,
+                "id": id,
                 "page": page,
                 "score": scores[i],
             }

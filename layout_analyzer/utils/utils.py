@@ -69,12 +69,13 @@ def get_sorted_indices(coordinates: list, width: int,
                 * width + coordinates[0]
 
     coordinates_ori: list = copy.deepcopy(coordinates)
-    coordinates.sort(key=lambda x: _sort(x, width, tolerance_factor))
+    coordinates_sor: list = copy.deepcopy(coordinates)
+    coordinates_sor.sort(key=lambda x: _sort(x, width, tolerance_factor))
 
     indices: list = list()
 
-    for coor in coordinates:
-        
+    for coor in coordinates_sor:
+
         index: int = coordinates_ori.index(coor)
         indices.append(index)
 

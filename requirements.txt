@@ -1,1 +1,12 @@
 detectron2==0.6+2a420edpt2.5.1cu118
+easyocr==1.7.2
+natsort==8.4.0
+numpy==1.26.4
+opencv-python==4.5.4.60
+paddleocr==2.9.1
+Pillow==9.4.0
+torch==2.5.1
+torchaudio==2.5.0+cu118
+torchmetrics ==1.5.0
+torchvision==0.20.1
+transformers==4.47.0.dev0
