@@ -17,18 +17,19 @@ from torch.autograd import Variable
 
 from .CRAFT_pytorch import imgproc
 from .CRAFT_pytorch.craft import CRAFT
-from ocr.utils.image import (
+from character_detector.utils.image import (
     bitwise_or,
     dilate,
     threshold,
 )
-from ocr.utils.utils import (
+from character_detector.utils.utils import (
     merge_coordinates,
     sort_coordinates,
     split_row,
     split_space,
 )
 from utils.gpu import available_gpu
+from utils.utils import download_from_googledrive
 
 
 class Craft():
@@ -50,7 +51,7 @@ class Craft():
                 cur_dir,
                 "CRAFT_pytorch/model/craft_mlt_25k.pth",
             )
-            self.__download(self.f, "1lx1A-pl0_bhvWPXiYm_qDXKl6gYPVkNG")
+            download_from_googledrive(self.f, "1lx1A-pl0_bhvWPXiYm_qDXKl6gYPVkNG")
 
     def __call__(self, image: np.ndarray, canvas_size: int=1280,
                  mag_ratio: float=1.5) -> np.ndarray:
@@ -65,20 +66,6 @@ class Craft():
         )
 
         return heatmap
-
-    def __download(self, fname: str, id: str):
-
-        if os.path.exists(fname):
-
-            print(f"{sys._getframe(0).f_code.co_name} - File exist, pass.")
-
-        else:
-
-            print(f"{sys._getframe(0).f_code.co_name} - Download files.")
-
-            dir: str = os.path.dirname(fname)
-            os.makedirs(dir, exist_ok=True)
-            gdown.download(id=id, output=fname, verify=False)
 
     def __pre_process(self, image: np.ndarray, canvas_size: int=1280,
                     mag_ratio: float=1.5) -> tuple[torch.Tensor, float]:

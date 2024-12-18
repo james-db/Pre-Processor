@@ -24,6 +24,7 @@ from layout_analyzer.utils.utils import (
 )
 from utils.gpu import available_gpu
 from utils.image import imread
+from utils.utils import download_from_googledrive
 
 
 class VGT(DefaultPredictor):
@@ -74,7 +75,7 @@ class VGT(DefaultPredictor):
                 "VGT/model",
                 model_fname,
             )
-            self.__download(model_path, model_id)
+            download_from_googledrive(model_path, model_id)
 
         if not is_exist_wordgrid_model:
 
@@ -88,7 +89,7 @@ class VGT(DefaultPredictor):
                 "VGT/model",
                 wordgrid_model_fname,
             )
-            self.__download(
+            download_from_googledrive(
                 wordgrid_model_path,
                 wordgrid_model_id,
             )
@@ -106,20 +107,6 @@ class VGT(DefaultPredictor):
         cfg.MODEL.DEVICE = device
 
         super().__init__(cfg)
-
-    def __download(self, fname: str, id: str):
-
-        if os.path.exists(fname):
-
-            print(f"{sys._getframe(0).f_code.co_name} - File exist, pass. Filename : {fname}")
-
-        else:
-
-            print(f"{sys._getframe(0).f_code.co_name} - Download files.")
-
-            dir: str = os.path.dirname(fname)
-            os.makedirs(dir, exist_ok=True)
-            gdown.download(id=id, output=fname, verify=False)
 
     def __get_setting(self, dataset: str) -> dict:
 

@@ -1,15 +1,18 @@
-import matplotlib.colors as mcolors
-import random
+import gdown
+import os
+import sys
 
 
-def get_random_color() -> tuple[int, int, int]:
+def download_from_googledrive(fname: str, id: str):
 
-    colors: dict = dict(
-        mcolors.TABLEAU_COLORS
-    )
-    color_names: list = list(colors.keys())
-    color_name: str = random.choice(color_names)
-    color: tuple[float, float, float] = mcolors.to_rgb(colors[color_name])
-    color: tuple[int, int, int] = tuple([int(255 * v) for v in color])
-    
-    return color
+    if os.path.exists(fname):
+
+        print(f"{sys._getframe(0).f_code.co_name} - File exist, pass.")
+
+    else:
+
+        print(f"{sys._getframe(0).f_code.co_name} - Download files.")
+
+        dir: str = os.path.dirname(fname)
+        os.makedirs(dir, exist_ok=True)
+        gdown.download(id=id, output=fname, verify=False)
