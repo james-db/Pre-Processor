@@ -60,7 +60,7 @@ def merge_coordinates(coordinates: list, ignore: int=5) -> list:
 
 def merge_text(text: list) -> str:
 
-    print(f"{sys._getframe(0).f_code.co_name} - In : {text}.")
+    # print(f"{sys._getframe(0).f_code.co_name} - In : {text}.")
 
     new_text: list = list()
 
@@ -82,7 +82,7 @@ def merge_text(text: list) -> str:
 
     new_text: str = "\n".join(new_text)
 
-    print(f"{sys._getframe(0).f_code.co_name} - Out : {new_text}.")
+    # print(f"{sys._getframe(0).f_code.co_name} - Out : {new_text}.")
 
     return new_text
 

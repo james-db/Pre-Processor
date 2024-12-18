@@ -32,6 +32,64 @@ def bitwise_or(image_1: np.ndarray, image_2: np.ndarray) -> np.ndarray:
 
     return image_bitwise
 
+def crop_image(coordinates: tuple, image: np.ndarray, border: int=0,
+               color: tuple=(255, 255, 255),
+               offset: int=0) -> tuple[np.ndarray, tuple]:
+
+    if isinstance(coordinates, list):
+
+        coordinates_new: list = list()
+        image_new: list = list()
+
+        while coordinates:
+
+            coordinates_old: tuple = coordinates.pop(0)
+            img_new, coor_new = crop_image(
+                coordinates_old,
+                image,
+                border,
+                color,
+                offset,
+            )
+            coordinates_new.append(coor_new)
+            image_new.append(img_new)
+
+    elif isinstance(coordinates, tuple):
+
+        x_1, y_1, x_2, y_2 = coordinates
+
+        if offset:
+
+            if len(image.shape) == 3:
+
+                h, w, _ = image.shape
+
+            elif len(image.shape) == 2:
+
+                h, w, = image.shape
+
+            x_1: int = max(0, x_1 - offset)
+            x_2: int = min(w, x_2 + offset)
+            y_1: int = max(0, y_1 - offset)
+            y_2: int = min(h, y_2 + offset)
+
+        coordinates_new: tuple = (x_1, y_1, x_2, y_2)
+        image_new: np.ndarray = image[y_1:y_2, x_1:x_2]
+
+        if border:
+
+            image_new: np.ndarray = cv2.copyMakeBorder(
+                image_new,
+                border,
+                border,
+                border,
+                border,
+                cv2.BORDER_CONSTANT,
+                value=color,
+            )
+
+    return image_new, coordinates_new
+
 def dilate(image: np.ndarray, empty: bool=False, iterations: int=3,
            kernel_size: tuple=(3, 1), max_value: int=1, thresh: int=128,
            type: int=cv2.THRESH_BINARY_INV) -> tuple[list, bool]:
