@@ -18,7 +18,6 @@ import yaml
 from layout_analyzer.models.VGT.ditod.config import add_vit_config
 from layout_analyzer.models.VGT.ditod.VGTTrainer import DefaultPredictor
 from layout_analyzer.utils.utils import (
-    get_sorted_indices,
     pdf2image,
     pdf2pickle,
 )
