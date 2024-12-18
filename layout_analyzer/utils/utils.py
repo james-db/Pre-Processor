@@ -1,4 +1,3 @@
-import copy
 import numpy as np
 import pdfplumber
 import pdf2image as _pdf2image
@@ -7,11 +6,14 @@ import pickle
 import sys
 from transformers import AutoTokenizer
 import tqdm
+import uuid
 
 
+UUID: uuid.UUID = uuid.uuid1()
 TEMP_DIR: str = os.path.join(
     os.path.split(os.path.dirname(os.path.abspath(__file__)))[0],
-    "temp"
+    ".temp",
+    str(UUID),
 )
 
 def create_grid_dict(page_data: list, tokenizer) -> dict:
@@ -33,53 +35,32 @@ def create_grid_dict(page_data: list, tokenizer) -> dict:
         "bbox_texts_list": []
     }
 
-    for ele in page_data:
+    if page_data:
 
-        grid["texts"].append(ele["text"])
+        for ele in page_data:
 
-        # Since expected bbox format is (x, y, width, height).
-        grid["bbox_texts_list"].append(
-            (ele["x0"],
-             ele["top"],
-             ele["x1"]-ele["x0"],
-             ele["bottom"]-ele["top"]))
+            grid["texts"].append(ele["text"])
 
-    input_ids = tokenize(grid["texts"], tokenizer)
+            # Since expected bbox format is (x, y, width, height).
+            grid["bbox_texts_list"].append(
+                (ele["x0"],
+                ele["top"],
+                ele["x1"]-ele["x0"],
+                ele["bottom"]-ele["top"]))
 
-    # Flatten the input_ids.
-    grid["input_ids"] = np.concatenate(input_ids)
+        input_ids = tokenize(grid["texts"], tokenizer)
 
-    grid["bbox_subword_list"] = np.array(
-        readjust_bbox_coords(
-            grid["bbox_texts_list"],
-            input_ids
-            )
+        # Flatten the input_ids.
+        grid["bbox_subword_list"] = np.array(
+            readjust_bbox_coords(
+                grid["bbox_texts_list"],
+                input_ids
+            ),
         )
-
-    grid["bbox_texts_list"] = np.array(grid["bbox_texts_list"])
+        grid["bbox_texts_list"] = np.array(grid["bbox_texts_list"])
+        grid["input_ids"] = np.concatenate(input_ids)
 
     return grid
-
-def get_sorted_indices(coordinates: list, width: int,
-                       tolerance_factor: int=10) -> list:
-
-    def _sort(coordinates, width: int, tolerance_factor: int=10) -> int:
-
-        return ((coordinates[1] // tolerance_factor) * tolerance_factor) \
-                * width + coordinates[0]
-
-    coordinates_ori: list = copy.deepcopy(coordinates)
-    coordinates_sor: list = copy.deepcopy(coordinates)
-    coordinates_sor.sort(key=lambda x: _sort(x, width, tolerance_factor))
-
-    indices: list = list()
-
-    for coor in coordinates_sor:
-
-        index: int = coordinates_ori.index(coor)
-        indices.append(index)
-
-    return indices
 
 def get_word_grid(fname: str) -> list:
     """Return the word information from a PDF file using pdfplumber.
@@ -132,24 +113,15 @@ def pdf2pickle(fname: str,
 
     save_dir: str = os.path.join(TEMP_DIR, os.path.basename(fname), "pickle")
     os.makedirs(save_dir, exist_ok=True)
-    
+
     for i, page in enumerate(tqdm.tqdm(wordgrid), 1):
 
         page_data: list = wordgrid[i - 1]
+        grid: dict = create_grid_dict(page_data, tokenizer)
 
-        if page_data:
+        with open(os.path.join(save_dir, f"page_{i}.pkl"), "wb") as f:
 
-            grid = create_grid_dict(page_data, tokenizer)
-
-            with open(os.path.join(save_dir, f"page_{i}.pkl"), "wb") as f:
-
-                pickle.dump(grid, f)
-
-        else:
-
-            print(f"{sys._getframe(0).f_code.co_name} - {i} page has no wordgrid..")
-
-            continue
+            pickle.dump(grid, f)
 
     return save_dir
 

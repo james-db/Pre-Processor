@@ -24,7 +24,10 @@ from layout_analyzer.utils.utils import (
 )
 from utils.gpu import available_gpu
 from utils.image import imread
-from utils.utils import download_from_googledrive
+from utils.utils import (
+    download_from_googledrive,
+    sort_coordinates,
+)
 
 
 class VGT(DefaultPredictor):
@@ -168,11 +171,18 @@ class VGT(DefaultPredictor):
             if instances.has("pred_boxes") else None
         scores: list = instances.scores.tolist() \
             if instances.has("scores") else None
-        indices: list = get_sorted_indices(
+        new_coordinates: list = sort_coordinates(
             coordinates,
             width,
             self.tolerance_factor,
         )
+
+        indices: list = list()
+
+        for coor in new_coordinates:
+
+            index: int = coordinates.index(coor)
+            indices.append(index)
 
         annotations: list = list()
 

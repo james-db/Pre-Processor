@@ -24,12 +24,14 @@ from character_detector.utils.image import (
 )
 from character_detector.utils.utils import (
     merge_coordinates,
-    sort_coordinates,
     split_row,
     split_space,
 )
 from utils.gpu import available_gpu
-from utils.utils import download_from_googledrive
+from utils.utils import (
+    download_from_googledrive,
+    sort_coordinates,
+)
 
 
 class Craft():

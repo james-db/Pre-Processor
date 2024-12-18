@@ -151,19 +151,6 @@ def shift_coordinates(coordinates: tuple,
 
     return new_coordinates
 
-def sort_coordinates(coordinates: list, width: int,
-                     tolerance_factor: int=10) -> list:
-
-    def _sort(coordinates, width: int, tolerance_factor: int=10) -> int:
-
-        return ((coordinates[1] // tolerance_factor) * tolerance_factor) \
-                * width + coordinates[0]
-
-    new_coordinates: list = copy.deepcopy(coordinates)
-    new_coordinates.sort(key=lambda x: _sort(x, width, tolerance_factor))
-
-    return new_coordinates
-
 def split_row(coordinates: list) -> list:
 
     new_coordinates: list = list()
