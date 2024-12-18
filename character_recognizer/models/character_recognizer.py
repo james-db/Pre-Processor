@@ -139,9 +139,9 @@ class Surya():
         is_available_gpu, _ = available_gpu(need_mem)
         device: str = "cuda" if is_available_gpu else "cpu"
         self.language = language
-        self.detection_model = load_det_model(device=device)
+        self.detection_model = load_det_model("vikp/surya_det3", device)
         self.detection_processor = load_det_processor()
-        self.recognition_model = load_rec_model(device=device)
+        self.recognition_model = load_rec_model("vikp/surya_rec2", device)
         self.recognition_processor = load_rec_processor()
 
     def __call__(self, image: np.ndarray, detect: bool=True,
