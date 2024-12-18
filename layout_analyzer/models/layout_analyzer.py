@@ -10,6 +10,7 @@ import math
 import natsort
 import numpy as np
 import os
+import shutil
 import sys
 import tqdm
 import yaml
@@ -156,6 +157,9 @@ class VGT(DefaultPredictor):
             width: int = image.shape[1]
             annots, id = self.post_process(id, i, result, width)
             annotations.extend(annots)
+
+        shutil.rmtree(image_dir, True)
+        shutil.rmtree(pickle_dir, True)
 
         return annotations
 

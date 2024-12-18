@@ -12,7 +12,7 @@ def download_from_googledrive(fname: str, id: str):
 
     else:
 
-        print(f"{sys._getframe(0).f_code.co_name} - Download files.")
+        print(f"{sys._getframe(0).f_code.co_name} - File download.")
 
         dir: str = os.path.dirname(fname)
         os.makedirs(dir, exist_ok=True)

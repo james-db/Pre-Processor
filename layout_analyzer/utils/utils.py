@@ -119,6 +119,10 @@ def pdf2pickle(fname: str,
         page_data: list = wordgrid[i - 1]
         grid: dict = create_grid_dict(page_data, tokenizer)
 
+        if not grid["input_ids"]:
+            
+            print(f"{sys._getframe(0).f_code.co_name} - Page {i} has no wordgrid.")
+
         with open(os.path.join(save_dir, f"page_{i}.pkl"), "wb") as f:
 
             pickle.dump(grid, f)
