@@ -3,6 +3,11 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+import warnings
+
+
+warnings.filterwarnings("ignore")
+
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog
 import gdown
@@ -108,6 +113,7 @@ class VGT(DefaultPredictor):
         ]
         cfg.merge_from_list(opts)  # Add model weights URL to config.
         cfg.MODEL.DEVICE = device
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.3
 
         super().__init__(cfg)
 
@@ -158,8 +164,8 @@ class VGT(DefaultPredictor):
             annots, id = self.post_process(id, i, result, width)
             annotations.extend(annots)
 
-        shutil.rmtree(image_dir, True)
-        shutil.rmtree(pickle_dir, True)
+        temp_dir = os.path.dirname(image_dir)
+        shutil.rmtree(temp_dir, True)
 
         return annotations
 
@@ -174,24 +180,17 @@ class VGT(DefaultPredictor):
             if instances.has("pred_boxes") else None
         scores: list = instances.scores.tolist() \
             if instances.has("scores") else None
-        new_coordinates: list = sort_coordinates(
+        indices, coordinates = sort_coordinates(
             coordinates,
             width,
-            self.tolerance_factor,
+            tolerance_factor=self.tolerance_factor,
         )
-
-        indices: list = list()
-
-        for coor in new_coordinates:
-
-            index: int = coordinates.index(coor)
-            indices.append(index)
 
         annotations: list = list()
 
-        for i in indices:
+        for i, coor in zip(indices, coordinates):
 
-            coor: tuple = tuple([c / self.dpi for c in coordinates[i]])
+            coor: tuple = tuple([c / self.dpi for c in coor])
             annotation: dict = {
                 "category": categories[i],
                 "coordinates": coor,

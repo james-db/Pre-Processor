@@ -169,10 +169,10 @@ class Craft():
             x, y, w, h = cv2.boundingRect(contour)
             coordinates.append((x, y, x + w, y + h))
 
-        coordinates: list = sort_coordinates(
+        _, coordinates = sort_coordinates(
             coordinates,
             image.shape[1],
-            tolerance_factor,
+            tolerance_factor=tolerance_factor,
         )
         coordinates: list = split_row(coordinates)
         coordinates: list = merge_coordinates(coordinates, ignore)
