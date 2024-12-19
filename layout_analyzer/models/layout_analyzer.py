@@ -24,8 +24,10 @@ import yaml
 from layout_analyzer.models.VGT.ditod.config import add_vit_config
 from layout_analyzer.models.VGT.ditod.VGTTrainer import DefaultPredictor
 from layout_analyzer.utils.utils import (
+    organize_result,
     pdf2image,
     pdf2pickle,
+    scale_coordinates2inch,
 )
 from utils.gpu import available_gpu
 from utils.image import imread
@@ -39,6 +41,7 @@ class VGT(DefaultPredictor):
 
     def __init__(self, config_path: str="", dataset: str="Doclaynet",
                  dpi: int = 72, model_path: str="",
+                 organization_threshold: float=0.8,
                  wordgrid_model_path: str="",
                  tokenizer: str="google-bert/bert-base-uncased"):
 
@@ -54,12 +57,12 @@ class VGT(DefaultPredictor):
         config: dict = self.__get_setting(dataset)
         self.classes: list = config.get("classes")
         self.dpi: int = dpi
+        self.organization_threshold: float = organization_threshold
         self.tokenizer = tokenizer
-        # self.tolerance_factor: int = max(
-        #     10,
-        #     int(math.floor(self.dpi / 72 * 10)),
-        # )
-        self.tolerance_factor: int = 10
+        self.tolerance_factor: int = max(
+            0.1,
+            int(math.floor(self.dpi / 72 * 0.1)),
+        )
 
         if not is_exist_config:
 
@@ -113,6 +116,7 @@ class VGT(DefaultPredictor):
         ]
         cfg.merge_from_list(opts)  # Add model weights URL to config.
         cfg.MODEL.DEVICE = device
+        cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.3
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.3
 
         super().__init__(cfg)
@@ -164,7 +168,7 @@ class VGT(DefaultPredictor):
             annots, id = self.post_process(id, i, result, width)
             annotations.extend(annots)
 
-        temp_dir = os.path.dirname(image_dir)
+        temp_dir: str = os.path.dirname(os.path.dirname(image_dir))
         shutil.rmtree(temp_dir, True)
 
         return annotations
@@ -178,22 +182,33 @@ class VGT(DefaultPredictor):
         ] if instances.has("pred_classes") else None
         coordinates: list = instances.pred_boxes.tensor.cpu().numpy().tolist() \
             if instances.has("pred_boxes") else None
+        coordinates: list = scale_coordinates2inch(coordinates, self.dpi)
         scores: list = instances.scores.tolist() \
             if instances.has("scores") else None
-        indices, coordinates = sort_coordinates(
+        result: dict = {  # For organization.
+            "category": categories,
+            "coordinates": coordinates,
+            "score": scores,
+        }
+        result: dict = organize_result(
+            result,
+            self.organization_threshold,
+        )
+        categories: list = result.get("category")
+        coordinates: list = result.get("coordinates")
+        scores: list = result.get("score")
+        indices, _ = sort_coordinates(
             coordinates,
             width,
             tolerance_factor=self.tolerance_factor,
         )
-
         annotations: list = list()
 
-        for i, coor in zip(indices, coordinates):
+        for i in indices:
 
-            coor: tuple = tuple([c / self.dpi for c in coor])
             annotation: dict = {
                 "category": categories[i],
-                "coordinates": coor,
+                "coordinates": coordinates[i],
                 "id": id,
                 "page": page,
                 "score": scores[i],

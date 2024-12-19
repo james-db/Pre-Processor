@@ -27,12 +27,17 @@ def sort_coordinates(coordinates: list, width: int,
         return ((coordinates[1][1] // tolerance_factor) * tolerance_factor) \
                 * width + coordinates[1][0]
 
+    # print(f"{sys._getframe(0).f_code.co_name} - In : {coordinates}.")
+
     new_coordinates: list = [
         (i, coor)
         for i, coor in enumerate(coordinates)
     ]
     new_coordinates.sort(key=lambda x: _sort(x, width, tolerance_factor))
+
     indices: list = [coor[0] for coor in new_coordinates]
     new_coordinates: list = [coor[1] for coor in new_coordinates]
+
+    # print(f"{sys._getframe(0).f_code.co_name} - Out : {new_coordinates}.")
 
     return indices, new_coordinates

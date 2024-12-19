@@ -10,7 +10,7 @@ def available_gpu(need_mem: int, need_cap: float=0.0) -> tuple[bool, list]:
     is_available_gpu: bool = torch.cuda.is_available()
 
     if is_available_gpu:
-        
+
         info: dict = get_gpu_info()
         ids: list = list()
         remaining_memories: list = list()
@@ -35,6 +35,10 @@ def available_gpu(need_mem: int, need_cap: float=0.0) -> tuple[bool, list]:
         )
         ids: list = [ids[i] for i in indices]
         remaining_memories: list = [remaining_memories[i] for i in indices]
+
+        if not ids:
+            
+            is_available_gpu: bool = False
 
     return is_available_gpu, ids
 

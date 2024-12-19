@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 import pdfplumber
 import pdf2image as _pdf2image
@@ -81,6 +82,48 @@ def get_word_grid(fname: str) -> list:
         words.append(page.extract_words())
 
     return words
+
+def organize_result(result, thresh: float=0.5):
+
+    # print(f"{sys._getframe(0).f_code.co_name} - In : {result}.")
+
+    categories: list = result.get("category")
+    coordinates: list = result.get("coordinates")
+    scores: list = result.get("score")
+
+    temp_coordinates: np.ndarray = np.array(copy.deepcopy(coordinates))
+    x_1: np.ndarray = temp_coordinates[:, 0]
+    y_1: np.ndarray = temp_coordinates[:, 1]
+    x_2: np.ndarray = temp_coordinates[:, 2]
+    y_2: np.ndarray = temp_coordinates[:, 3]
+    areas: np.ndarray = (x_2 - x_1 + 1) * (y_2 - y_1 + 1)
+    order: np.ndarray = np.array(copy.deepcopy(scores)).argsort()[::-1]
+    keep: list = list()
+
+    while order.size > 0:
+
+        i: np.int64 = order[0]
+        keep.append(i)
+        xx1: np.ndarray = np.maximum(x_1[i], x_1[order[1:]])
+        yy1: np.ndarray = np.maximum(y_1[i], y_1[order[1:]])
+        xx2: np.ndarray = np.minimum(x_2[i], x_2[order[1:]])
+        yy2: np.ndarray = np.minimum(y_2[i], y_2[order[1:]])
+        w: np.ndarray = np.maximum(0.0, xx2 - xx1 + 1)
+        h: np.ndarray = np.maximum(0.0, yy2 - yy1 + 1)
+        inter: np.ndarray = w * h
+        ovr: np.ndarray = inter / (areas[i] + areas[order[1:]] - inter)
+        inds: np.ndarray = np.where(ovr <= thresh)[0]
+        order: np.ndarray = order[inds + 1]
+
+    result: dict = {
+        "category": [categories[i] for i in keep],
+        "coordinates": [coordinates[i] for i in keep],
+        "score": [scores[i] for i in keep],
+    }
+
+    # print(f"{sys._getframe(0).f_code.co_name} - Out : {result}.")
+
+    return result
 
 def pdf2image(fname: str, dpi: int=72) -> str:
 
@@ -175,6 +218,17 @@ def select_tokenizer(model_name: str):
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     return tokenizer
+
+def scale_coordinates2inch(coordinates, dpi: int=72) -> list:
+
+    new_coordinates: list = list()
+
+    for coor in coordinates:
+        
+        new_coor: tuple = tuple([c / dpi for c in coor])
+        new_coordinates.append(new_coor)
+
+    return new_coordinates
 
 def tokenize(text_body: list, tokenizer) -> np.ndarray:
     """Tokenize the input text using the provided tokenizer.
