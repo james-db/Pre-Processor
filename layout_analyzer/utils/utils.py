@@ -119,7 +119,7 @@ def pdf2pickle(fname: str,
         page_data: list = wordgrid[i - 1]
         grid: dict = create_grid_dict(page_data, tokenizer)
 
-        if not grid["input_ids"]:
+        if isinstance(grid["input_ids"], list):
             
             print(f"{sys._getframe(0).f_code.co_name} - Page {i} has no wordgrid.")
 
