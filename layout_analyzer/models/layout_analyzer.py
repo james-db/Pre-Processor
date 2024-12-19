@@ -116,8 +116,11 @@ class VGT(DefaultPredictor):
         ]
         cfg.merge_from_list(opts)  # Add model weights URL to config.
         cfg.MODEL.DEVICE = device
-        cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.3
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.3
+        # cfg.MODEL.RETINANET.SCORE_THRESH_TEST = 0.6  # Test.
+        # cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.01  # Test.
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
+
+        print(f"{sys._getframe(0).f_code.co_name} - cfg : {cfg}.")
 
         super().__init__(cfg)
 
@@ -176,20 +179,20 @@ class VGT(DefaultPredictor):
     def post_process(self, id: int, page: str, result: dict,
                      width: int) -> tuple[list, int]:
 
-        instances = result.get("instances")
-        categories: list = [
-            self.classes[i] for i in instances.pred_classes.tolist()
-        ] if instances.has("pred_classes") else None
-        coordinates: list = instances.pred_boxes.tensor.cpu().numpy().tolist() \
-            if instances.has("pred_boxes") else None
-        coordinates: list = scale_coordinates2inch(coordinates, self.dpi)
-        scores: list = instances.scores.tolist() \
-            if instances.has("scores") else None
-        result: dict = {  # For organization.
-            "category": categories,
-            "coordinates": coordinates,
-            "score": scores,
-        }
+        # instances = result.get("instances")
+        # categories: list = [
+        #     self.classes[i] for i in instances.pred_classes.tolist()
+        # ] if instances.has("pred_classes") else None
+        # coordinates: list = instances.pred_boxes.tensor.cpu().numpy().tolist() \
+        #     if instances.has("pred_boxes") else None
+        # coordinates: list = scale_coordinates2inch(coordinates, self.dpi)
+        # scores: list = instances.scores.tolist() \
+        #     if instances.has("scores") else None
+        # result: dict = {  # For organization.
+        #     "category": categories,
+        #     "coordinates": coordinates,
+        #     "score": scores,
+        # }
         result: dict = organize_result(
             result,
             self.organization_threshold,
@@ -202,6 +205,7 @@ class VGT(DefaultPredictor):
             width,
             tolerance_factor=self.tolerance_factor,
         )
+
         annotations: list = list()
 
         for i in indices:
