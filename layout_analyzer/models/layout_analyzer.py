@@ -24,7 +24,7 @@ import yaml
 from layout_analyzer.models.VGT.ditod.config import add_vit_config
 from layout_analyzer.models.VGT.ditod.VGTTrainer import DefaultPredictor
 from layout_analyzer.utils.utils import (
-    organize_result,
+    organize,
     pdf2image,
     pdf2pickle,
     scale_coordinates2inch,
@@ -41,7 +41,7 @@ class VGT(DefaultPredictor):
 
     def __init__(self, config_path: str="", dataset: str="Doclaynet",
                  dpi: int = 72, model_path: str="",
-                 organization_threshold: float=0.8,
+                 organization_threshold: float=0.001,
                  wordgrid_model_path: str="",
                  tokenizer: str="google-bert/bert-base-uncased"):
 
@@ -120,7 +120,7 @@ class VGT(DefaultPredictor):
         # cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.01  # Test.
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
 
-        print(f"{sys._getframe(0).f_code.co_name} - cfg : {cfg}.")
+        # print(f"{sys._getframe(0).f_code.co_name} - cfg : {cfg}.")
 
         super().__init__(cfg)
 
@@ -172,53 +172,67 @@ class VGT(DefaultPredictor):
             annotations.extend(annots)
 
         temp_dir: str = os.path.dirname(os.path.dirname(image_dir))
+    
         shutil.rmtree(temp_dir, True)
+
+        print(f"{sys._getframe(0).f_code.co_name} - temp_dir : {temp_dir}.")  # Test.
 
         return annotations
 
     def post_process(self, id: int, page: str, result: dict,
                      width: int) -> tuple[list, int]:
 
-        # instances = result.get("instances")
-        # categories: list = [
+        instances = result.get("instances")
+        # categories: list =  [
         #     self.classes[i] for i in instances.pred_classes.tolist()
         # ] if instances.has("pred_classes") else None
-        # coordinates: list = instances.pred_boxes.tensor.cpu().numpy().tolist() \
+        categories: list = [
+            self.classes[i] for i in instances.pred_classes.tolist()
+        ]
+        # coordinates: list = instances.pred_boxes.tensor.tolist() \
         #     if instances.has("pred_boxes") else None
-        # coordinates: list = scale_coordinates2inch(coordinates, self.dpi)
+        coordinates: list = instances.pred_boxes.tensor.tolist()
         # scores: list = instances.scores.tolist() \
         #     if instances.has("scores") else None
-        # result: dict = {  # For organization.
-        #     "category": categories,
-        #     "coordinates": coordinates,
-        #     "score": scores,
-        # }
-        result: dict = organize_result(
-            result,
-            self.organization_threshold,
-        )
-        categories: list = result.get("category")
-        coordinates: list = result.get("coordinates")
-        scores: list = result.get("score")
-        indices, _ = sort_coordinates(
-            coordinates,
-            width,
-            tolerance_factor=self.tolerance_factor,
-        )
+        scores: list = instances.scores.tolist()
 
         annotations: list = list()
 
-        for i in indices:
+        if coordinates:
 
-            annotation: dict = {
-                "category": categories[i],
-                "coordinates": coordinates[i],
-                "id": id,
-                "page": page,
-                "score": scores[i],
+            coordinates: list = scale_coordinates2inch(coordinates, self.dpi)
+            result: dict = {  # For organize.
+                "category": categories,
+                "coordinates": coordinates,
+                "score": scores,
             }
-            annotations.append(annotation)
-            id += 1
+
+            print(f"{sys._getframe(0).f_code.co_name} - result : {result}.")  # Test.
+        
+            result: dict = organize(  # Test.
+                result,
+                self.organization_threshold,
+            )
+            categories: list = result.get("category")
+            coordinates: list = result.get("coordinates")
+            scores: list = result.get("score")
+            indices, _ = sort_coordinates(
+                coordinates,
+                width,
+                tolerance_factor=self.tolerance_factor,
+            )
+
+            for i in indices:
+
+                annotation: dict = {
+                    "category": categories[i],
+                    "coordinates": coordinates[i],
+                    "id": id,
+                    "page": page,
+                    "score": scores[i],
+                }
+                annotations.append(annotation)
+                id += 1
 
         return annotations, id
 

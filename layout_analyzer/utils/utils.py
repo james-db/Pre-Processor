@@ -83,7 +83,7 @@ def get_word_grid(fname: str) -> list:
 
     return words
 
-def organize_result(result, thresh: float=0.5):
+def organize(result: dict, thresh: float=0.5) -> dict:
 
     # print(f"{sys._getframe(0).f_code.co_name} - In : {result}.")
 
@@ -91,39 +91,75 @@ def organize_result(result, thresh: float=0.5):
     coordinates: list = result.get("coordinates")
     scores: list = result.get("score")
 
-    temp_coordinates: np.ndarray = np.array(copy.deepcopy(coordinates))
-    x_1: np.ndarray = temp_coordinates[:, 0]
-    y_1: np.ndarray = temp_coordinates[:, 1]
-    x_2: np.ndarray = temp_coordinates[:, 2]
-    y_2: np.ndarray = temp_coordinates[:, 3]
-    areas: np.ndarray = (x_2 - x_1 + 1) * (y_2 - y_1 + 1)
-    order: np.ndarray = np.array(copy.deepcopy(scores)).argsort()[::-1]
+    if isinstance(coordinates, list):
+
+        coordinates: np.ndarray = np.array(coordinates)
+
+    if isinstance(scores, list):
+
+        scores: np.ndarray = np.array(scores)
+
+    x_1: np.ndarray = coordinates[:, 0]
+    y_1: np.ndarray = coordinates[:, 1]
+    x_2: np.ndarray = coordinates[:, 2]
+    y_2: np.ndarray = coordinates[:, 3]
+    areas: np.ndarray = (x_2 - x_1) * (y_2 - y_1)
+    order: np.ndarray = scores.argsort()[::-1]
     keep: list = list()
 
     while order.size > 0:
 
-        i: np.int64 = order[0]
-        keep.append(i)
-        xx1: np.ndarray = np.maximum(x_1[i], x_1[order[1:]])
-        yy1: np.ndarray = np.maximum(y_1[i], y_1[order[1:]])
-        xx2: np.ndarray = np.minimum(x_2[i], x_2[order[1:]])
-        yy2: np.ndarray = np.minimum(y_2[i], y_2[order[1:]])
-        w: np.ndarray = np.maximum(0.0, xx2 - xx1 + 1)
-        h: np.ndarray = np.maximum(0.0, yy2 - yy1 + 1)
-        inter: np.ndarray = w * h
-        ovr: np.ndarray = inter / (areas[i] + areas[order[1:]] - inter)
-        inds: np.ndarray = np.where(ovr <= thresh)[0]
-        order: np.ndarray = order[inds + 1]
+        index: np.int64 = order[0]
+        xx_1: np.ndarray = np.maximum(x_1[index], x_1[order[1:]])
+        yy_1: np.ndarray = np.maximum(y_1[index], y_1[order[1:]])
+        xx_2: np.ndarray = np.minimum(x_2[index], x_2[order[1:]])
+        yy_2: np.ndarray = np.minimum(y_2[index], y_2[order[1:]])
+        height: np.ndarray = np.maximum(0.0, yy_2 - yy_1)
+        width: np.ndarray = np.maximum(0.0, xx_2 - xx_1)
+        intersection: np.ndarray = width * height
+        iou: np.ndarray = intersection / \
+            (areas[index] + areas[order[1:]] - intersection)
+        indices: np.ndarray = np.where(iou <= thresh)[0]
+        overlap_indices: np.ndarray = np.where(iou > thresh)[0]
+        keep.append((index, tuple(order[overlap_indices + 1].tolist())))
+        order: np.ndarray = order[indices + 1]
 
-    result: dict = {
-        "category": [categories[i] for i in keep],
-        "coordinates": [coordinates[i] for i in keep],
-        "score": [scores[i] for i in keep],
+    new_categoreis: list = list()
+    new_coordinates: list = list()
+    new_scores: list = list()
+
+    for index, indices in keep:
+
+        x_1, y_1, x_2, y_2 = coordinates[index]
+
+        if indices:
+
+            overlap: np.ndarray = np.take(coordinates, indices, 0)
+            x_1: np.float64 = np.append(overlap[:, 0], x_1).min()
+            x_2: np.float64 = np.append(overlap[:, 2], x_2).max()
+            y_1: np.float64 = np.append(overlap[:, 1], y_1).min()
+            y_2: np.float64 = np.append(overlap[:, 3], y_2).max()
+
+        new_categoreis.append(categories[index])
+        new_coordinates.append(
+            (
+                float(x_1),
+                float(y_1),
+                float(x_2),
+                float(y_2),
+            ),
+        )
+        new_scores.append(float(scores[index]))
+
+    new_result: dict = {
+        "category": new_categoreis,
+        "coordinates": new_coordinates,
+        "score": new_scores,
     }
 
-    # print(f"{sys._getframe(0).f_code.co_name} - Out : {result}.")
+    # print(f"{sys._getframe(0).f_code.co_name} - Out : {new_result}.")
 
-    return result
+    return new_result
 
 def pdf2image(fname: str, dpi: int=72) -> str:
 
