@@ -172,10 +172,7 @@ class VGT(DefaultPredictor):
             annotations.extend(annots)
 
         temp_dir: str = os.path.dirname(os.path.dirname(image_dir))
-    
         shutil.rmtree(temp_dir, True)
-
-        print(f"{sys._getframe(0).f_code.co_name} - temp_dir : {temp_dir}.")  # Test.
 
         return annotations
 
@@ -183,17 +180,10 @@ class VGT(DefaultPredictor):
                      width: int) -> tuple[list, int]:
 
         instances = result.get("instances")
-        # categories: list =  [
-        #     self.classes[i] for i in instances.pred_classes.tolist()
-        # ] if instances.has("pred_classes") else None
         categories: list = [
             self.classes[i] for i in instances.pred_classes.tolist()
         ]
-        # coordinates: list = instances.pred_boxes.tensor.tolist() \
-        #     if instances.has("pred_boxes") else None
         coordinates: list = instances.pred_boxes.tensor.tolist()
-        # scores: list = instances.scores.tolist() \
-        #     if instances.has("scores") else None
         scores: list = instances.scores.tolist()
 
         annotations: list = list()
@@ -201,15 +191,12 @@ class VGT(DefaultPredictor):
         if coordinates:
 
             coordinates: list = scale_coordinates2inch(coordinates, self.dpi)
-            result: dict = {  # For organize.
+            result: dict = {
                 "category": categories,
                 "coordinates": coordinates,
                 "score": scores,
             }
-
-            print(f"{sys._getframe(0).f_code.co_name} - result : {result}.")  # Test.
-        
-            result: dict = organize(  # Test.
+            result: dict = organize(
                 result,
                 self.organization_threshold,
             )
