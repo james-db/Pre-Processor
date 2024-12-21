@@ -1,6 +1,8 @@
+*__pycache__
 *.bin
 *.pyc
 *.pth
+*.temp
+*.vscode
 
-*/.temp
 test

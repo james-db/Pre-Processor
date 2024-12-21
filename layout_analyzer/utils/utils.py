@@ -91,7 +91,6 @@ def organize(result: dict, thresh: float=0.5) -> dict:
     coordinates: list = result.get("coordinates")
     scores: list = result.get("score")
 
-<<<<<<< HEAD
     if isinstance(categories, list):
 
         new_categoreis: np.ndarray = np.array(categories)
@@ -122,23 +121,6 @@ def organize(result: dict, thresh: float=0.5) -> dict:
     y_2: np.ndarray = new_coordinates[:, 3]
     areas: np.ndarray = (x_2 - x_1) * (y_2 - y_1)
     order: np.ndarray = new_scores.argsort()[::-1]
-=======
-    if isinstance(coordinates, list):
-
-        coordinates: np.ndarray = np.array(coordinates)
-
-    if isinstance(scores, list):
-
-        scores: np.ndarray = np.array(scores)
-
-    x_1: np.ndarray = coordinates[:, 0]
-    y_1: np.ndarray = coordinates[:, 1]
-    x_2: np.ndarray = coordinates[:, 2]
-    y_2: np.ndarray = coordinates[:, 3]
-    areas: np.ndarray = (x_2 - x_1) * (y_2 - y_1)
-    order: np.ndarray = scores.argsort()[::-1]
-    keep: list = list()
->>>>>>> 7e74df630b5aa9f2efc0b06f7582f57677c079e8
 
     while order.size > 0:
 
@@ -153,7 +135,6 @@ def organize(result: dict, thresh: float=0.5) -> dict:
         iou: np.ndarray = intersection / \
             (areas[index] + areas[order[1:]] - intersection)
         indices: np.ndarray = np.where(iou <= thresh)[0]
-<<<<<<< HEAD
         overlap_indices: np.ndarray = order[np.where(iou > thresh)[0] + 1]
 
         if overlap_indices.size:
@@ -201,43 +182,6 @@ def organize(result: dict, thresh: float=0.5) -> dict:
         "category": new_categoreis.tolist(),
         "coordinates": new_coordinates.tolist(),
         "score": new_scores.tolist(),
-=======
-        overlap_indices: np.ndarray = np.where(iou > thresh)[0]
-        keep.append((index, tuple(order[overlap_indices + 1].tolist())))
-        order: np.ndarray = order[indices + 1]
-
-    new_categoreis: list = list()
-    new_coordinates: list = list()
-    new_scores: list = list()
-
-    for index, indices in keep:
-
-        x_1, y_1, x_2, y_2 = coordinates[index]
-
-        if indices:
-
-            overlap: np.ndarray = np.take(coordinates, indices, 0)
-            x_1: np.float64 = np.append(overlap[:, 0], x_1).min()
-            x_2: np.float64 = np.append(overlap[:, 2], x_2).max()
-            y_1: np.float64 = np.append(overlap[:, 1], y_1).min()
-            y_2: np.float64 = np.append(overlap[:, 3], y_2).max()
-
-        new_categoreis.append(categories[index])
-        new_coordinates.append(
-            (
-                float(x_1),
-                float(y_1),
-                float(x_2),
-                float(y_2),
-            ),
-        )
-        new_scores.append(float(scores[index]))
-
-    new_result: dict = {
-        "category": new_categoreis,
-        "coordinates": new_coordinates,
-        "score": new_scores,
->>>>>>> 7e74df630b5aa9f2efc0b06f7582f57677c079e8
     }
 
     # print(f"{sys._getframe(0).f_code.co_name} - Out : {new_result}.")
