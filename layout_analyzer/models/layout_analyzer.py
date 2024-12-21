@@ -116,9 +116,7 @@ class VGT(DefaultPredictor):
         ]
         cfg.merge_from_list(opts)  # Add model weights URL to config.
         cfg.MODEL.DEVICE = device
-        # cfg.MODEL.RETINANET.SCORE_THRESH_TEST = 0.6  # Test.
-        # cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.01  # Test.
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.3
 
         # print(f"{sys._getframe(0).f_code.co_name} - cfg : {cfg}.")
 
