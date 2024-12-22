@@ -40,9 +40,9 @@ from utils.utils import (
 class VGT(DefaultPredictor):
 
     def __init__(self, config_path: str="", dataset: str="Doclaynet",
-                 dpi: int = 72, model_path: str="",
-                 organization_threshold: float=0.001,
-                 wordgrid_model_path: str="",
+                 dpi: int=72, model_path: str="",
+                 organization_threshold: float=0.01,
+                 wordgrid_model_path: str="", threshold: float=0.5,
                  tokenizer: str="google-bert/bert-base-uncased"):
 
         need_mem: int = 4613734400
@@ -116,7 +116,7 @@ class VGT(DefaultPredictor):
         ]
         cfg.merge_from_list(opts)  # Add model weights URL to config.
         cfg.MODEL.DEVICE = device
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.3
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = threshold
 
         # print(f"{sys._getframe(0).f_code.co_name} - cfg : {cfg}.")
 
