@@ -25,8 +25,7 @@ from layout_analyzer.models.VGT.ditod.config import add_vit_config
 from layout_analyzer.models.VGT.ditod.VGTTrainer import DefaultPredictor
 from layout_analyzer.utils.utils import (
     organize,
-    pdf2image,
-    pdf2pickle,
+    pdf2image_and_pickle,
     scale_coordinates2inch,
 )
 from utils.gpu import available_gpu
@@ -151,7 +150,11 @@ class VGT(DefaultPredictor):
 
     def analyze(self, fname: str) -> list:
 
-        image_dir, pickle_dir = self.pre_process(fname)
+        image_dir, pickle_dir = pdf2image_and_pickle(
+            fname,
+            self.dpi,
+            self.tokenizer,
+        )
         image_fnames: list = natsort.natsorted(os.listdir(image_dir))
 
         annotations: list = list()
@@ -220,12 +223,3 @@ class VGT(DefaultPredictor):
                 id += 1
 
         return annotations, id
-
-    def pre_process(self, fname: str) -> tuple[str, str]:
-
-        print(f"{sys._getframe(0).f_code.co_name} - Pre-prcoessing. Filename : {fname}.")
-
-        image_dir: str = pdf2image(fname, self.dpi)
-        pickle_dir: str = pdf2pickle(fname, self.tokenizer)
-
-        return image_dir, pickle_dir

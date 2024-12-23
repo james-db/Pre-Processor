@@ -1,7 +1,6 @@
 import copy
 import numpy as np
 import pdfplumber
-import pdf2image as _pdf2image
 import os
 import pickle
 import sys
@@ -62,26 +61,6 @@ def create_grid_dict(page_data: list, tokenizer) -> dict:
         grid["input_ids"] = np.concatenate(input_ids)
 
     return grid
-
-def get_word_grid(fname: str) -> list:
-    """Return the word information from a PDF file using pdfplumber.
-
-    Args:
-        fname (str): The path to the input PDF file.
-
-    Returns:
-        list: Returns a list of shape (num_pages, num_words, 8).
-    """
-    doc = pdfplumber.open(fname)
-
-    words = list()
-
-    for page in doc.pages:
-        
-        # Extracts words and their bounding boxes.
-        words.append(page.extract_words())
-
-    return words
 
 def organize(result: dict, thresh: float=0.5) -> dict:
 
@@ -188,52 +167,44 @@ def organize(result: dict, thresh: float=0.5) -> dict:
 
     return new_result
 
-def pdf2image(fname: str, dpi: int=72) -> str:
+def pdf2image_and_pickle(fname: str, dpi: int=72,
+                         tokenizer: str="google-bert/bert-base-uncased") -> str:
 
-    print(f"{sys._getframe(0).f_code.co_name} - PDF converted to images and saved.")
+    print(f"{sys._getframe(0).f_code.co_name} - PDF converted to images with pickles and saved.")
 
-    # Convert the PDF to images.
-    images = _pdf2image.convert_from_path(
-        fname,
-        dpi=dpi,  # Standard dpi used by pdfplumber is 72.
-        fmt="png",
-    )
-
-    save_dir: str = os.path.join(TEMP_DIR, os.path.basename(fname), "image")
-    os.makedirs(save_dir, exist_ok=True)
-
-    # Save all images.
-    for i, image in enumerate(tqdm.tqdm(images), 1):
-
-        image.save(os.path.join(save_dir, f"page_{i}.png"))
-
-    return save_dir
-
-def pdf2pickle(fname: str,
-               tokenizer: str="google-bert/bert-base-uncased") -> str:
-
-    print(f"{sys._getframe(0).f_code.co_name} - PDF converted to pickles and saved.")
+    basename: str = os.path.basename(fname)
+    image_dir: str = os.path.join(TEMP_DIR, basename, "image")
+    pickle_dir: str = os.path.join(TEMP_DIR, basename, "pickle")
+    os.makedirs(image_dir, exist_ok=True)
+    os.makedirs(pickle_dir, exist_ok=True)
 
     tokenizer = select_tokenizer(tokenizer)
-    wordgrid = get_word_grid(fname)
 
-    save_dir: str = os.path.join(TEMP_DIR, os.path.basename(fname), "pickle")
-    os.makedirs(save_dir, exist_ok=True)
+    document = pdfplumber.open(fname)
 
-    for i, page in enumerate(tqdm.tqdm(wordgrid), 1):
+    for page in document.pages:
 
-        page_data: list = wordgrid[i - 1]
-        grid: dict = create_grid_dict(page_data, tokenizer)
+        page_number: int = page.page_number
+        image = page.to_image(resolution=dpi)  # Resulution equals dpi.
+        image.save(os.path.join(image_dir, f"page_{page_number}.png"))
+        
+        # Extracts words and their bounding boxes.
+        words: list = page.extract_words()
+
+        grid: dict = create_grid_dict(words, tokenizer)
 
         if isinstance(grid["input_ids"], list):
             
-            print(f"{sys._getframe(0).f_code.co_name} - Page {i} has no wordgrid.")
+            print(f"{sys._getframe(0).f_code.co_name} - Page {page_number} has no wordgrid.")
 
-        with open(os.path.join(save_dir, f"page_{i}.pkl"), "wb") as f:
+        with open(
+                os.path.join(pickle_dir,f"page_{page_number}.pkl"),
+                "wb",
+            ) as f:
 
             pickle.dump(grid, f)
 
-    return save_dir
+    return image_dir, pickle_dir
 
 def readjust_bbox_coords(bbox: list, tokens: list) -> list:
     """Readjust the bounding box coordinates based on the tokenized input.
