@@ -42,7 +42,7 @@ class VGT(DefaultPredictor):
     def __init__(self, config_path: str="", dataset: str="Doclaynet",
                  dpi: int=72, model_path: str="",
                  organization_threshold: float=0.01,
-                 wordgrid_model_path: str="", threshold: float=0.5,
+                 wordgrid_model_path: str="", threshold: float=0.05,
                  tokenizer: str="google-bert/bert-base-uncased"):
 
         need_mem: int = 4613734400
